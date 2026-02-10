@@ -1,295 +1,504 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEM A PAU - Ultimate Edition</title>
-    <style>
-        body { margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        #players { position: absolute; top: 20px; right: 20px; border: 1px solid #fff; padding: 15px; text-align: right; font-size: 0.9em; min-width: 150px; display: none; }
-        #app { width: 100%; display: flex; justify-content: center; }
-        .center { text-align: center; max-width: 650px; width: 90%; }
-        .logo { font-family: 'Impact', sans-serif; font-size: 3.5rem; letter-spacing: 5px; border: 4px solid #fff; padding: 10px 20px; display: inline-block; margin-bottom: 30px; text-transform: uppercase; }
-        input { background: #000; color: #fff; border: 1px solid #fff; padding: 12px; margin: 10px 0; text-align: center; width: 100%; font-size: 1.2rem; }
-        button { background: #fff; color: #000; border: 1px solid #fff; padding: 12px 25px; margin: 10px 5px; cursor: pointer; font-weight: bold; text-transform: uppercase; width: 100%; font-size: 1rem; }
-        button:hover { background: #ccc; }
-        .unidade { opacity: 0.6; font-size: 0.8rem; letter-spacing: 2px; }
-        .pergunta-texto { font-size: 1.4rem; margin: 20px 0; min-height: 80px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEM A PAU - Ultimate Edition</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    color: #fff;
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+  }
 
-        /* Estilos do Chat e Terminal */
-        #chat-container { position: absolute; bottom: 20px; left: 20px; width: 300px; height: 250px; border: 1px solid #fff; background: rgba(0,0,0,0.8); display: none; flex-direction: column; }
-        #chat-messages { flex-grow: 1; overflow-y: auto; padding: 10px; font-size: 0.85rem; border-bottom: 1px solid #fff; }
-        #chat-input { border: none; padding: 10px; width: 100%; box-sizing: border-box; text-align: left; font-size: 0.9rem; }
-    </style>
+  #players {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: 1px solid #fff;
+    padding: 15px;
+    text-align: right;
+    font-size: 0.9em;
+    min-width: 150px;
+    z-index: 10;
+  }
+
+  /* --- ESTILOS DO CHAT --- */
+  #chat-container {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 300px;
+    height: 250px;
+    border: 1px solid #fff;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    flex-direction: column;
+    z-index: 100;
+  }
+  #chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+    font-size: 0.8rem;
+    text-align: left;
+  }
+  #chat-input {
+    background: #000;
+    border: none;
+    border-top: 1px solid #fff;
+    color: #fff;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: 'Courier New', monospace;
+  }
+
+  #app {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .center {
+    text-align: center;
+    max-width: 650px;
+    width: 90%;
+  }
+
+  .logo {
+    font-family: 'Impact', sans-serif;
+    font-size: 4rem;
+    letter-spacing: 5px;
+    border: 4px solid #fff;
+    padding: 10px 20px;
+    display: inline-block;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+  }
+
+  input {
+    background: #000;
+    color: #fff;
+    border: 1px solid #fff;
+    padding: 12px;
+    margin: 10px 0;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    font-size: 1.2rem;
+  }
+
+  button {
+    background: #fff;
+    color: #000;
+    border: 1px solid #fff;
+    padding: 12px 25px;
+    margin: 10px 5px;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+    width: 100%;
+    font-size: 1rem;
+    transition: 0.2s;
+  }
+
+  button:hover { background: #ccc; }
+
+  .pergunta-texto { font-size: 1.4rem; margin: 20px 0; min-height: 80px; }
+  .unidade { opacity: 0.6; font-size: 0.8rem; letter-spacing: 2px; }
+  
+  .ganhou { color: #ff4d4d; font-weight: bold; text-transform: uppercase; margin: 5px 0; }
+  .nao-recebeu { color: #2ecc71; font-weight: bold; text-transform: uppercase; margin: 5px 0; }
+
+  .palpite-atual {
+    border-top: 1px solid #333;
+    padding-top: 20px;
+    margin-top: 20px;
+  }
+
+  .stats-info { font-size: 0.7rem; opacity: 0.4; margin-top: 10px; }
+</style>
 </head>
 <body>
 
 <div id="players"></div>
-<div id="app">CONECTANDO...</div>
+<div id="app"></div>
 
 <div id="chat-container">
-    <div id="chat-messages"></div>
-    <input type="text" id="chat-input" placeholder="Digite sua mensagem ou comando..." onkeydown="handleChat(event)">
+  <div id="chat-messages"></div>
+  <input type="text" id="chat-input" placeholder="Digite sua mensagem ou comando..." onkeydown="if(event.key==='Enter') enviarMensagem()">
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-
 <script>
-const firebaseConfig = {
-    apiKey: "AIzaSyBLfN4uLs6L1_XnSSdpIbhrPKBSreAtK_8",
-    authDomain: "nemapau-47956.firebaseapp.com",
-    databaseURL: "https://nemapau-47956-default-rtdb.firebaseio.com/",
-    projectId: "nemapau-47956",
-    storageBucket: "nemapau-47956.firebasestorage.app",
-    messagingSenderId: "575679805707",
-    appId: "1:575679805707:web:768cf1108ede446f710a0e"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const gameRef = db.ref("game_state");
-const playersRef = db.ref("players");
-const chatRef = db.ref("chat");
-
-const perguntas = [
-    { texto: "Distância média da Terra à Lua", unidade: "km", resposta: 384400 },
-    { texto: "Altura do Monte Everest", unidade: "m", resposta: 8849 },
-    { texto: "População do Brasil", unidade: "pessoas", resposta: 203062512 },
-    { texto: "Velocidade da luz", unidade: "km/s", resposta: 299792 }
+/* ================= BANCO DE DADOS ================= */
+const bancoPerguntasOriginal = [
+  { texto: "Distância média da Terra à Lua", unidade: "km", resposta: 384400 },
+  { texto: "Altura do Monte Everest", unidade: "m", resposta: 8849 },
+  { texto: "Idade estimada da Terra", unidade: "anos", resposta: 4540000000 },
+  { texto: "População estimada do Brasil (Censo 2022)", unidade: "pessoas", resposta: 203062512 },
+  { texto: "Velocidade da luz no vácuo", unidade: "km/s", resposta: 299792 },
+  { texto: "Altura do Burj Khalifa (Prédio mais alto do mundo)", unidade: "m", resposta: 828 },
+  { texto: "Extensão total da Grande Muralha da China", unidade: "km", resposta: 21196 },
+  { texto: "Profundidade máxima da Fossa das Marianas", unidade: "m", resposta: 10935 },
+  { texto: "Comprimento do Rio Nilo", unidade: "km", resposta: 6650 },
+  { texto: "Peso médio de uma Baleia Azul adulta", unidade: "kg", resposta: 140000 },
+  { texto: "Número de ilhas que compõem a Indonésia", unidade: "ilhas", resposta: 17508 },
+  { texto: "Recorde de gols oficiais de Pelé", unidade: "gols", resposta: 1281 },
+  { texto: "Temperatura no centro do Sol", unidade: "graus celsius", resposta: 15000000 },
+  { texto: "Quantidade de ossos no corpo humano adulto", unidade: "ossos", resposta: 206 },
+  { texto: "Área total da Floresta Amazônica", unidade: "km²", resposta: 5500000 },
+  { texto: "Número de dentes de um tubarão-branco", unidade: "dentes", resposta: 30000 },
+  { texto: "Duração do voo mais longo de uma galinha", unidade: "segundos", resposta: 13 },
+  { texto: "Recorde mundial de Hot Dogs em 10 min", unidade: "unidades", resposta: 76 },
+  { texto: "População da China (aprox.)", unidade: "pessoas", resposta: 1412000000 },
+  { texto: "Velocidade máxima de um Guepardo", unidade: "km/h", resposta: 120 },
+  { texto: "Ano de fundação da cidade de Roma", unidade: "ano (a.C.)", resposta: 753 },
+  { texto: "Pressão no fundo do oceano (Fossa das Marianas)", unidade: "psi", resposta: 15750 },
+  { texto: "Episódios de 'Os Simpsons' (até 2023)", unidade: "episódios", resposta: 750 },
+  { texto: "Comprimento de campo de futebol (máximo)", unidade: "m", resposta: 120 },
+  { texto: "Quantos corações tem um polvo?", unidade: "corações", resposta: 3 },
+  { texto: "Tempo de gestação de um elefante africano", unidade: "dias", resposta: 640 },
+  { texto: "Altura da Estátua da Liberdade", unidade: "m", resposta: 93 },
+  { texto: "Permanência de um humano no espaço (Padalka)", unidade: "dias", resposta: 878 },
+  { texto: "Número de teclas em um piano padrão", unidade: "teclas", resposta: 88 },
+  { texto: "Anos viveu a pessoa mais velha (Jeanne Calment)", unidade: "anos", resposta: 122 },
+  { texto: "Número de países membros da ONU", unidade: "países", resposta: 193 },
+  { texto: "Peso da maior pizza já fabricada", unidade: "kg", resposta: 1219 },
+  { texto: "Litros de água nas Cataratas do Iguaçu (seg)", unidade: "litros", resposta: 1500000 },
+  { texto: "Velocidade de rotação da Terra no Equador", unidade: "km/h", resposta: 1670 },
+  { texto: "Ano em que o homem pisou na Lua", unidade: "ano", resposta: 1969 },
+  { texto: "Duração da Guerra dos Cem Anos", unidade: "anos", resposta: 116 },
+  { texto: "Número de tentáculos de uma lula gigante", unidade: "tentáculos", resposta: 10 },
+  { texto: "Quantos quilômetros tem a Maratona?", unidade: "km", resposta: 42 },
+  { texto: "Recorde de velocidade de um carro de F1", unidade: "km/h", resposta: 372 },
+  { texto: "Elementos na Tabela Periódica atual", unidade: "elementos", resposta: 118 },
+  { texto: "Altura do salto mais alto de um humano", unidade: "cm", resposta: 162 },
+  { texto: "Peso do cérebro humano médio", unidade: "gramas", resposta: 1400 },
+  { texto: "Batidas do coração humano por dia", unidade: "batidas", resposta: 100000 },
+  { texto: "Comprimento total do intestino delgado", unidade: "m", resposta: 7 },
+  { texto: "Estrelas existem na bandeira do Brasil?", unidade: "estrelas", resposta: 27 },
+  { texto: "Litros de sangue no corpo humano adulto", unidade: "litros", resposta: 5 },
+  { texto: "Ebulição da água no topo do Everest", unidade: "graus celsius", resposta: 71 },
+  { texto: "Distância de Marte ao Sol (média)", unidade: "milhões de km", resposta: 228 },
+  { texto: "Quantas cores tem o arco-íris?", unidade: "cores", resposta: 7 },
+  { texto: "Recorde de maior número de filhos de uma mulher", unidade: "filhos", resposta: 69 }
 ];
 
-let state = { tela: "inicial", jogadores: {} };
-let myId = null;
-let logado = false; 
+/* ================= LÓGICA DO ESTADO ================= */
+let state = {
+  tela: "inicial",
+  jogadores: [],
+  jogadorDaVez: null,
+  pergunta: null,
+  valorAtual: null,
+  ultimoJogador: null,
+  pontosParaPerder: 10,
+  msgFeedbackHtml: "",
+  meuNome: "",
+  souHost: false, // Controle de quem manda na sala
+  
+  perguntasDisponiveis: [...bancoPerguntasOriginal],
+  rodadaDaFila: 1
+};
 
-// Sincronização de Chat
-chatRef.limitToLast(20).on("value", (snapshot) => {
-    const messagesDiv = document.getElementById("chat-messages");
-    const data = snapshot.val();
-    if (data) {
-        messagesDiv.innerHTML = Object.values(data).map(m => `<div><strong>${m.nome}</strong>: ${m.texto}</div>`).join("");
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+const dado = n => Math.floor(Math.random() * n) + 1;
+
+function obterPerguntaSemRepetir() {
+  if (state.perguntasDisponiveis.length === 0) {
+    state.perguntasDisponiveis = [...bancoPerguntasOriginal];
+    state.rodadaDaFila++;
+  }
+  const index = Math.floor(Math.random() * state.perguntasDisponiveis.length);
+  return state.perguntasDisponiveis.splice(index, 1)[0];
+}
+
+/* ================= CHAT & TERMINAL ================= */
+function enviarMensagem() {
+  const input = document.getElementById("chat-input");
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  // Lógica de Comando (Terminal)
+  if (msg.startsWith("/")) {
+    const senha = prompt("Digite a senha de administrador:");
+    if (senha === "jean24gs") {
+      executarComando(msg);
+    } else {
+      alert("Senha incorreta!");
     }
-});
+  } else {
+    // Mensagem Normal
+    exibirNoChat(state.meuNome, msg);
+  }
+  input.value = "";
+}
 
-gameRef.on("value", (snapshot) => {
-    state = snapshot.val() || { tela: "inicial", jogadores: {} };
-    render();
-});
+function exibirNoChat(autor, texto) {
+  const box = document.getElementById("chat-messages");
+  const msgElement = document.createElement("div");
+  msgElement.innerHTML = `<strong>${autor}</strong>: ${texto}`;
+  box.appendChild(msgElement);
+  box.scrollTop = box.scrollHeight;
+}
+
+/* TUTORIAL: COMO CRIAR NOVOS COMANDOS
+   1. Adicione um novo 'case' dentro da função executarComando abaixo.
+   2. O 'case' deve ser o nome do comando (ex: "/meucomando").
+   3. Dentro do case, escreva a lógica JavaScript que deseja executar.
+*/
+function executarComando(cmd) {
+  const c = cmd.toLowerCase().split(" ")[0];
+  switch(c) {
+    case "/endgame":
+      exibirNoChat("SISTEMA", "Comando /endgame executado.");
+      state.tela = "ranking";
+      render();
+      break;
+    case "/takehost":
+      state.souHost = true;
+      exibirNoChat("SISTEMA", "Você agora é o HOST da sala.");
+      render();
+      break;
+    default:
+      alert("Comando não reconhecido.");
+  }
+}
+
+/* ================= RENDERIZAÇÃO ================= */
+function renderPlayers() {
+  const div = document.getElementById("players");
+  if (state.tela === "inicial" || state.jogadores.length === 0) {
+    div.style.display = "none";
+    document.getElementById("chat-container").style.display = "none";
+    return;
+  }
+  div.style.display = "block";
+  document.getElementById("chat-container").style.display = "flex";
+  div.innerHTML = "<strong>PLACAR</strong><br>" + state.jogadores
+    .map(j => `<div>${j.nome}: ${j.pontos}</div>`)
+    .join("");
+}
 
 function render() {
-    const appDiv = document.getElementById("app");
-    const playersDiv = document.getElementById("players");
-    const chatDiv = document.getElementById("chat-container");
-    
-    // Verificação de segurança: Jogador sem nome
-    if (logado && myId && state.jogadores && !state.jogadores[myId]) {
-        location.reload(); // Envia de volta ao início
-        return;
-    }
+  // Verificação de segurança: Jogador sem nome
+  if (state.tela !== "inicial" && (!state.meuNome || state.meuNome === "")) {
+     state.tela = "inicial";
+  }
 
-    if (!logado) {
-        appDiv.innerHTML = `
-            <div class="center">
-                <div class="logo">NEM A PAU</div>
-                <input id="nome" placeholder="SEU NOME">
-                <input id="bots" type="number" min="0" max="5" value="0" placeholder="BOTS">
-                <button onclick="entrar()">ENTRAR NO JOGO</button>
-            </div>`;
-        chatDiv.style.display = "none";
-        return;
-    }
+  renderPlayers();
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+  const box = document.createElement("div");
+  box.className = "center";
+  app.appendChild(box);
 
-    chatDiv.style.display = "flex";
-    appDiv.innerHTML = "";
-    const box = document.createElement("div");
-    box.className = "center";
-    appDiv.appendChild(box);
+  if (state.tela === "inicial") {
+    box.innerHTML = `
+      <div class="logo">NEM A PAU</div>
+      <input id="nome" placeholder="SEU NOME">
+      <input id="bots" type="number" min="0" max="9" value="2">
+      <p><small>QUANTIDADE DE BOTS (META: 10 PONTOS)</small></p>
+      <button onclick="entrar()">ENTRAR NO JOGO</button>
+    `;
+  }
 
-    if (state.jogadores && state.tela !== "inicial") {
-        playersDiv.style.display = "block";
-        playersDiv.innerHTML = "<strong>PLACAR</strong><br>" + Object.values(state.jogadores)
-            .map(j => `<div>${j.nome}: ${j.pontos}</div>`).join("");
-    }
+  if (state.tela === "espera") {
+    box.innerHTML = `
+      <h2>SALA DE ESPERA</h2>
+      ${state.jogadores.map(j=>`<div>- ${j.nome} ${j.humano && state.jogadores[0].nome === j.nome ? '(HOST)' : ''}</div>`).join("")}
+      
+      ${state.souHost ? `
+        <div style="margin-top:20px; border:1px solid #444; padding:10px;">
+          <small>PAINEL DO HOST</small><br>
+          Bots: <input id="bots_ajuste" type="number" value="${state.jogadores.filter(j=>!j.humano).length}" style="width:50px; font-size:1rem; padding:5px;">
+          <button onclick="atualizarBots()">ATUALIZAR BOTS</button>
+        </div>
+        <button onclick="iniciar()">INICIAR PARTIDA</button>
+      ` : `<p><small>Aguardando o Host iniciar...</small></p>`}
+    `;
+  }
 
-    if (state.tela === "espera") {
-        box.innerHTML = `
-            <h2>SALA DE ESPERA</h2>
-            ${Object.values(state.jogadores).map(j => `<div>- ${j.nome}</div>`).join("")}
-            ${state.host === myId ? `
-                <div style="margin-top:20px; border:1px solid #555; padding:10px;">
-                    <label>ADICIONAR BOTS:</label>
-                    <input id="host_bots" type="number" min="0" max="10" value="0" style="width:50px">
-                    <button onclick="adicionarBotsHost()">ADICIONAR</button>
-                </div>
-                <button onclick="iniciarPartida()">INICIAR PARTIDA (HOST)</button>
-            ` : '<p>Aguardando o Host iniciar...</p>'}
-        `;
-    } 
-    else if (state.tela === "jogo") {
-        const jVez = state.jogadorDaVez;
-        box.innerHTML = `
-            <div>VEZ DE: <strong>${jVez.nome.toUpperCase()}</strong></div>
-            <div class="unidade">${state.pergunta.unidade}</div>
-            <div class="pergunta-texto">${state.pergunta.texto}</div>
-            <div style="margin-top:30px">
-                ${jVez.id === myId ? `
-                    <input id="chute" type="number" placeholder="VALOR MAIOR">
-                    <button onclick="chutar()">CHUTAR</button>
-                    ${state.valorAtual ? '<button onclick="duvidar()" style="background:red; color:white">NEM A PAU!</button>' : ''}
-                ` : `<p>AGUARDANDO JOGADA...</p>`}
-            </div>
-        `;
-    }
-    else if (state.tela === "resultado_final") {
-        box.innerHTML = `<h2>FIM DE JOGO - RANKING</h2>` + 
-        Object.values(state.jogadores).sort((a,b) => b.pontos - a.pontos)
-        .map(j => `<div>${j.nome}: ${j.pontos} pontos</div>`).join("") +
-        (state.host === myId ? `<button onclick="gameRef.update({tela:'espera'})">VOLTAR PARA ESPERA</button>` : "");
-    }
+  if (state.tela === "jogo") {
+    const j = state.jogadorDaVez;
+    box.innerHTML = `
+      <div style="margin-bottom:10px">VEZ DE: <strong>${j.nome.toUpperCase()}</strong></div>
+      <div class="unidade">UNIDADE: ${state.pergunta.unidade}</div>
+      <div class="pergunta-texto">${state.pergunta.texto}</div>
+
+      ${state.valorAtual !== null ? `
+        <div class="palpite-atual">
+          Último palpite: <strong>${state.valorAtual.toLocaleString()}</strong><br>
+          <small>por ${state.ultimoJogador.nome}</small>
+        </div>
+      ` : "<p><small>Você é o primeiro a chutar nesta rodada!</small></p>"}
+
+      <div style="margin-top:30px">
+        ${j.humano && j.nome === state.meuNome ? `
+          <input id="chute" type="number" placeholder="VALOR MAIOR QUE ${state.valorAtual || 0}">
+          <button onclick="chutar()">CHUTAR</button>
+          ${state.valorAtual !== null ? `<button onclick="duvidar()" style="background:transparent; color:#fff; border:1px solid #fff">DUVIDAR!</button>` : ""}
+        ` : `<p>${j.humano ? 'AGUARDANDO JOGADOR...' : 'O BOT ESTÁ PENSANDO...'}</p>`}
+      </div>
+      <div class="stats-info">Perguntas restantes: ${state.perguntasDisponiveis.length} | Ciclo: ${state.rodadaDaFila}</div>
+    `;
+    if (!j.humano) setTimeout(jogadaIA, 1500);
+  }
+
+  if (state.tela === "nemapau") {
+    box.innerHTML = `<div class="logo" style="font-size:5rem; border-color: red; color: red;">NEM A PAU!</div>`;
+  }
+
+  if (state.tela === "resultado") {
+    box.innerHTML = `
+      <h3>${state.pergunta.texto}</h3>
+      <p>RESPOSTA CORRETA: <strong>${state.pergunta.resposta.toLocaleString()}</strong> ${state.pergunta.unidade}</p>
+      <p>PALPITE DUVIDADO: <strong>${state.valorAtual.toLocaleString()}</strong></p>
+      <hr style="border:1px solid #333; margin: 20px 0;">
+      <div style="font-size: 1.3rem;">
+        ${state.msgFeedbackHtml}
+      </div>
+    `;
+  }
+
+  if (state.tela === "ranking") {
+    const r = [...state.jogadores].sort((a,b)=> a.pontos - b.pontos);
+    box.innerHTML = `
+      <div class="logo">RANKING</div>
+      <p>FIM DE JOGO!</p>
+      ${r.map((j, i)=>`<div>${i+1}º ${j.nome} — ${j.pontos} pts</div>`).join("")}
+      <br>
+      <button onclick="location.reload()">REINICIAR TUDO</button>
+    `;
+  }
 }
 
-async function entrar() {
-    const nomeInput = document.getElementById("nome").value.trim();
-    if (!nomeInput) return alert("Digite um nome!");
-    const nomeDesejado = nomeInput;
-    const numBots = parseInt(document.getElementById("bots").value) || 0;
-
-    const snapAtuais = await playersRef.once("value");
-    const jogadoresAtivos = snapAtuais.val() || {};
-    const nomeJaExiste = Object.values(jogadoresAtivos).some(j => j.nome.toUpperCase() === nomeDesejado.toUpperCase());
-
-    if (nomeJaExiste) {
-        alert("Este nome já está na sala! Escolha outro.");
-        return;
-    }
-
-    const pRef = playersRef.push();
-    myId = pRef.key;
-    pRef.onDisconnect().remove();
-
-    const novoJogador = { id: myId, nome: nomeDesejado, pontos: 0, humano: true };
-    await pRef.set(novoJogador);
-    logado = true;
-
-    if (nomeDesejado === "JEANZITO CREY CREY") {
-        let novosJogs = { ...jogadoresAtivos };
-        novosJogs[myId] = novoJogador;
-        
-        for(let i=1; i<=numBots; i++) {
-            const bId = `BOT_${i}`;
-            novosJogs[bId] = { id: bId, nome: `BOT_${i}`, pontos: 0, humano: false };
-        }
-
-        gameRef.set({
-            tela: "espera",
-            jogadores: novosJogs,
-            host: myId
-        });
-    } else {
-        if (state.tela === "inicial") {
-            alert("Aguarde o JEANZITO CREY CREY criar a sala!");
-            pRef.remove();
-            logado = false;
-        }
-    }
+/* ================= AÇÕES ================= */
+function entrar() {
+  const nomeInput = document.getElementById("nome").value.trim();
+  if (!nomeInput) {
+    alert("Digite um nome!");
+    return;
+  }
+  state.meuNome = nomeInput;
+  state.souHost = true; // Primeiro a entrar é Host no local
+  
+  const numBots = Number(document.getElementById("bots").value);
+  state.jogadores = [{ nome: state.meuNome, pontos: 0, humano: true }];
+  for (let i=1; i<=numBots; i++) state.jogadores.push({ nome:`BOT_${i}`, pontos:0, humano:false });
+  
+  state.tela = "espera";
+  render();
 }
 
-function adicionarBotsHost() {
-    const n = parseInt(document.getElementById("host_bots").value) || 0;
-    let novosJogs = { ...state.jogadores };
-    for(let i=1; i<=n; i++) {
-        const bId = `BOT_${Date.now()}_${i}`;
-        novosJogs[bId] = { id: bId, nome: `BOT_${i}`, pontos: 0, humano: false };
-    }
-    gameRef.update({ jogadores: novosJogs });
+function atualizarBots() {
+  const num = Number(document.getElementById("bots_ajuste").value);
+  const humanos = state.jogadores.filter(j => j.humano);
+  state.jogadores = [...humanos];
+  for (let i=1; i<=num; i++) state.jogadores.push({ nome:`BOT_${i}`, pontos:0, humano:false });
+  render();
 }
 
-function handleChat(e) {
-    if (e.key === "Enter") {
-        const input = document.getElementById("chat-input");
-        const texto = input.value.trim();
-        if (!texto) return;
-
-        if (texto.startsWith("/")) {
-            // SISTEMA DE TERMINAL/COMANDOS
-            const pass = prompt("Digite a senha de administrador:");
-            if (pass === "jean24gs") {
-                executarComando(texto);
-            } else {
-                alert("Senha incorreta!");
-            }
-        } else {
-            // ENVIO DE MENSAGEM NORMAL
-            chatRef.push({
-                nome: state.jogadores[myId].nome,
-                texto: texto
-            });
-        }
-        input.value = "";
-    }
+function iniciar() {
+  state.jogadores.sort(() => Math.random() - 0.5);
+  novaRodada();
 }
 
-/** * TUTORIAL DE CRIAÇÃO DE COMANDOS:
- * Para criar um novo comando, adicione um novo 'case' dentro da função executarComando abaixo.
- * Use o padrão:
- * case "/nomedocomando":
- * // Lógica aqui (ex: gameRef.update({ ... }))
- * break;
- */
-function executarComando(cmd) {
-    const parts = cmd.split(" ");
-    const acao = parts[0].toLowerCase();
-
-    switch(acao) {
-        case "/endgame":
-            gameRef.update({ tela: "resultado_final" });
-            break;
-        case "/takehost":
-            gameRef.update({ host: myId });
-            alert("Você agora é o HOST!");
-            break;
-        default:
-            alert("Comando não reconhecido.");
-    }
-}
-
-function iniciarPartida() {
-    const lista = Object.values(state.jogadores);
-    gameRef.update({
-        tela: "jogo",
-        pergunta: perguntas[Math.floor(Math.random() * perguntas.length)],
-        jogadorDaVez: lista[0],
-        valorAtual: null,
-        ultimoJogador: null
-    });
+function novaRodada(quemComeca) {
+  state.jogadorDaVez = quemComeca || state.jogadores[0];
+  state.pergunta = obterPerguntaSemRepetir();
+  state.valorAtual = null;
+  state.ultimoJogador = null;
+  state.tela = "jogo";
+  render();
 }
 
 function chutar() {
-    const v = Number(document.getElementById("chute").value);
-    if (state.valorAtual && v <= state.valorAtual) return alert("Chute maior!");
-    const lista = Object.values(state.jogadores);
-    const index = lista.findIndex(j => j.id === myId);
-    gameRef.update({
-        valorAtual: v,
-        ultimoJogador: state.jogadores[myId],
-        jogadorDaVez: lista[(index + 1) % lista.length]
-    });
+  const input = document.getElementById("chute");
+  const v = Number(input.value);
+  if (state.valorAtual !== null && v <= state.valorAtual) {
+    alert("Você deve chutar um valor MAIOR que o anterior!");
+    return;
+  }
+  if (!v || v <= 0) return;
+  state.valorAtual = v;
+  state.ultimoJogador = state.jogadorDaVez;
+  proximo();
 }
 
 function duvidar() {
+  state.tela = "nemapau";
+  render();
+
+  setTimeout(() => {
     const correta = state.pergunta.resposta;
     const jChutou = state.ultimoJogador;
     const jDuvidou = state.jogadorDaVez;
-    let msg = (state.valorAtual > correta) ? `MENTIRA! ${jChutou.nome} errou.` : `VERDADE! ${jChutou.nome} acertou.`;
-    
-    if (state.valorAtual > correta) state.jogadores[jChutou.id].pontos++;
-    else state.jogadores[jDuvidou.id].pontos++;
 
-    gameRef.update({ tela: "resultado", msgFeedbackHtml: msg, jogadores: state.jogadores });
-    setTimeout(iniciarPartida, 4000);
+    if (state.valorAtual > correta) {
+      jChutou.pontos++;
+      state.msgFeedbackHtml = `
+        <div class="ganhou">${jChutou.nome} ganhou um ponto</div>
+        <div class="nao-recebeu">${jDuvidou.nome} não recebeu pontos</div>
+      `;
+    } else {
+      jDuvidou.pontos++;
+      state.msgFeedbackHtml = `
+        <div class="nao-recebeu">${jChutou.nome} não recebeu pontos</div>
+        <div class="ganhou">${jDuvidou.nome} ganhou um ponto</div>
+      `;
+    }
+
+    state.tela = "resultado";
+    render();
+
+    setTimeout(() => {
+      if (state.jogadores.some(j => j.pontos >= state.pontosParaPerder)) {
+        state.tela = "ranking";
+      } else {
+        novaRodada(state.jogadorDaVez);
+      }
+      render();
+    }, 4000); 
+  }, 2000);
 }
+
+function proximo() {
+  const i = state.jogadores.indexOf(state.jogadorDaVez);
+  state.jogadorDaVez = state.jogadores[(i + 1) % state.jogadores.length];
+  render();
+}
+
+function jogadaIA() {
+  if (state.tela !== "jogo") return;
+  const chanceDuvidar = state.valorAtual === null ? 0 : 
+                        (state.valorAtual > state.pergunta.resposta ? 0.6 : 0.1);
+  
+  if (state.valorAtual !== null && Math.random() < chanceDuvidar) {
+    duvidar();
+  } else {
+    let chute;
+    if (state.valorAtual === null) {
+      chute = Math.floor(state.pergunta.resposta * (0.3 + Math.random() * 0.4));
+    } else {
+      chute = state.valorAtual + Math.floor(state.pergunta.resposta * (0.05 + Math.random() * 0.15));
+    }
+    state.valorAtual = chute;
+    state.ultimoJogador = state.jogadorDaVez;
+    proximo();
+  }
+}
+
+render();
 </script>
 </body>
 </html>
