@@ -488,12 +488,7 @@ function render() {
       
       <div style="margin-top:20px">
         ${jVez.nome === state.meuNome ? `
-          <input 
-            id="chInp" 
-            type="text" 
-            placeholder="Maior que ${state.valorAtual || 0}"
-            onkeydown="if(event.key === 'Enter') enviarPalpite()"
-          >
+          <input id="chInp" type="number" placeholder="Maior que ${state.valorAtual || 0}">
           <button onclick="enviarPalpite()">CHUTAR</button>
           ${state.valorAtual ? `<button onclick="duvidar()" style="background:none; color:red; border-color:red; margin-top:10px;">NEM A PATO!</button>` : ""}
         ` : `<p>Aguardando ${jVez.nome} jogar...</p>`}
@@ -575,38 +570,17 @@ function iniciarJogo() {
 }
 
 function enviarPalpite() {
-  const input = document.getElementById("chInp");
-  const valorDigitado = input.value.trim();
-
-  // ✅ Permitir apenas números inteiros positivos
-  if (!/^\d+$/.test(valorDigitado)) {
-    alert("Digite apenas números inteiros positivos (sem ponto e sem negativo).");
-    return;
-  }
-
-  const v = Number(valorDigitado);
-
-  // Não permitir zero se quiser bloquear também
-  if (v < 0) {
-    alert("Não são permitidos valores negativos.");
-    return;
-  }
-
-  if (state.valorAtual && v <= state.valorAtual) {
-    alert("O valor deve ser MAIOR que o anterior!");
-    return;
-  }
-
+  const v = Number(document.getElementById("chInp").value);
+  if (state.valorAtual && v <= state.valorAtual) return alert("O valor deve ser MAIOR que o anterior!");
+  
   const idx = state.jogadores.findIndex(j => j.nome === state.jogadorDaVez.nome);
   const proximo = state.jogadores[(idx + 1) % state.jogadores.length];
-
+  
   salvarEstadoGlobal({
     valorAtual: v,
     ultimoJogador: state.jogadorDaVez,
     jogadorDaVez: proximo
   });
-
-  input.value = ""; // limpa o campo depois de enviar
 }
 
 async function duvidar() {
