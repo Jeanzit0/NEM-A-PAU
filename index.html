@@ -56,6 +56,10 @@
 </div>
 
 <script>
+
+/*Conexão do user, para evitar jogadores fantasmas*/
+const minhaConexaoId = Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+
 /* ================= MÚSICA ================= */
 document.addEventListener("click", function iniciarMusica() {
   const musica = document.getElementById("bg-music");
@@ -231,7 +235,10 @@ function conectarASala(id) {
   salaRef.once('value', (snap) => {
     const data = snap.val();
     // Verifica se o nome já existe na sala
-    if (data && data.jogadores && data.jogadores.some(j => j.nome.toLowerCase() === state.meuNome.toLowerCase())) {
+    if (data && data.jogadores && data.jogadores.some(j => 
+                                      j.nome.toLowerCase() === state.meuNome.toLowerCase() &&
+                                      j.id !== minhaConexaoId)
+        ) {
       document.getElementById("overlay-nome").style.display = "flex";
       state.salaAlvo = id.toLowerCase(); // Guarda para tentar novamente após trocar nome
       return;
@@ -249,6 +256,7 @@ function realizarConexao(id) {
   state.salaId = id.toLowerCase();
   const estadoRef = db.ref(`salas/${state.salaId}/estado`);
 
+  // 🔥 Listener principal
   estadoRef.on('value', (snap) => {
     const onlineState = snap.val();
     if (onlineState) {
@@ -258,9 +266,10 @@ function realizarConexao(id) {
       state.pergunta = onlineState.pergunta;
       state.valorAtual = onlineState.valorAtual;
       state.ultimoJogador = onlineState.ultimoJogador;
+
       state.souHost = (
         state.jogadores.length > 0 &&
-        state.jogadores[0].nome === state.meuNome
+        state.jogadores[0].id === minhaConexaoId
       );
 
       render();
@@ -275,15 +284,27 @@ function realizarConexao(id) {
   estadoRef.once('value', (snap) => {
     let currentData = snap.val() || { tela: "espera", jogadores: [] };
 
-    if (!currentData.jogadores.find(j => j.nome === state.meuNome)) {
-      currentData.jogadores.push({
-        nome: state.meuNome,
-        pontos: 0,
-        avatar: state.meuAvatar || null
-      });
+    // Remove duplicado por ID
+    currentData.jogadores = (currentData.jogadores || []).filter(
+      j => j.id !== minhaConexaoId
+    );
 
-      estadoRef.set(currentData);
-    }
+    // Adiciona jogador
+    currentData.jogadores.push({
+      id: minhaConexaoId,
+      nome: state.meuNome,
+      pontos: 0,
+      avatar: state.meuAvatar || null
+    });
+
+    // 🔥 SALVA NO FIREBASE
+    estadoRef.set(currentData);
+
+    // 🔥 onDisconnect correto (remove por índice atual)
+    const index = currentData.jogadores.findIndex(j => j.id === minhaConexaoId);
+    db.ref(`salas/${state.salaId}/estado/jogadores/${index}`)
+      .onDisconnect()
+      .remove();
   });
 
   document.getElementById("overlay-nome").style.display = "none";
@@ -656,7 +677,7 @@ function sairDaSala() {
     if (!data || !data.jogadores) return;
 
     let jogadores = [...data.jogadores];
-    const indexSaindo = jogadores.findIndex(j => j.nome === state.meuNome);
+    const indexSaindo = jogadores.findIndex(j => j.id === minhaConexaoId);  
 
     if (indexSaindo === -1) return;
 
