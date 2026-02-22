@@ -220,6 +220,8 @@ let state = {
   meuAvatar: null
 };
 
+const TEMPO_RESULTADO_DUVIDA = 10000; // 10000 = 10 segundos
+
 function atualizarBackground() {
 
   if (state.tela === "inicial") {
@@ -304,6 +306,10 @@ function realizarConexao(id) {
       state.tela = onlineState.tela;
       state.jogadores = onlineState.jogadores || [];
       state.jogadorDaVez = onlineState.jogadorDaVez;
+      state.respostaOficial = onlineState.respostaOficial;
+      state.jogadorUm = onlineState.jogadorUm;
+      state.jogadorDois = onlineState.jogadorDois;
+      state.jogadorUmPontuou = onlineState.jogadorUmPontuou;
       state.pergunta = onlineState.pergunta;
       state.valorAtual = onlineState.valorAtual;
       state.ultimoJogador = onlineState.ultimoJogador;
@@ -489,6 +495,45 @@ function render() {
       </div>`;
   }
 
+if (state.tela === "resultado-duvida") {
+
+  const jogadorUm = state.jogadorUm;
+  const jogadorDois = state.jogadorDois;
+
+  box.innerHTML = `
+    <div class="pergunta-texto">${state.pergunta.texto}</div>
+    <div class="unidade-texto">UM: ${state.pergunta.unidade}</div>
+
+    <p style="font-size:1.5rem; margin-top:15px;">
+      RESPOSTA OFICIAL: <strong>${state.respostaOficial}</strong>
+    </p>
+
+    <hr style="margin:25px 0; border:1px solid #fff;">
+
+    ${
+      state.jogadorUmPontuou
+      ?
+      `
+      <p style="color:red; font-size:1.3rem;">
+        O jogador ${jogadorUm.nome}, <strong>marcou</strong> pontos nesta rodada.
+      </p>
+      <p style="color:yellow; font-size:1.3rem;">
+        O jogador ${jogadorDois.nome}, <strong>não marcou</strong> pontos nesta rodada.
+      </p>
+      `
+      :
+      `
+      <p style="color:yellow; font-size:1.3rem;">
+        O jogador ${jogadorUm.nome}, <strong>não marcou</strong> pontos nesta rodada.
+      </p>
+      <p style="color:red; font-size:1.3rem;">
+        O jogador ${jogadorDois.nome}, <strong>marcou</strong> pontos nesta rodada.
+      </p>
+      `
+    }
+  `;
+}
+
   if (state.tela === "ranking") {
     const r = [...state.jogadores].sort((a,b)=> a.pontos - b.pontos);
     box.innerHTML = `<h2>RANKING FINAL</h2>` + r.map((j,i)=>`<div>${i+1}º ${j.nome}: ${j.pontos}</div>`).join("") +
@@ -539,32 +584,54 @@ function enviarPalpite() {
 }
 
 async function duvidar() {
-  tocarSom("som-duvida", 0.6);
-  await delay(1000);
 
   const correta = state.pergunta.resposta;
   let novosJogadores = [...state.jogadores];
-  
-  if (state.valorAtual > correta) {
-    const jIdx = novosJogadores.findIndex(j => j.nome === state.ultimoJogador.nome);
-    novosJogadores[jIdx].pontos++;
-    tocarSom("som-ponto", 0.6);
-    alert(`MENTIRA! A resposta era ${correta}. ${state.ultimoJogador.nome} ganha 1 ponto.`);
-  } else {
-    const dIdx = novosJogadores.findIndex(j => j.nome === state.meuNome);
-    novosJogadores[dIdx].pontos++;
 
-    tocarSom("som-erro", 0.6);
-    alert(`VERDADE! A resposta era ${correta}. Você errou e ganha 1 ponto.`);
+  const jogadorUm = state.ultimoJogador;
+  const jogadorDois = state.jogadorDaVez;
+
+  let resultadoTexto = "";
+  let jogadorUmPontuou = false;
+
+  if (state.valorAtual > correta) {
+    // JogadorUm mentiu
+    const jIdx = novosJogadores.findIndex(j => j.nome === jogadorUm.nome);
+    novosJogadores[jIdx].pontos++;
+    jogadorUmPontuou = true;
+  } else {
+    // JogadorDois errou a dúvida
+    const dIdx = novosJogadores.findIndex(j => j.nome === jogadorDois.nome);
+    novosJogadores[dIdx].pontos++;
   }
 
-  const novaPergunta = bancoPerguntasOriginal[Math.floor(Math.random() * bancoPerguntasOriginal.length)];
+  // 🔥 Atualiza estado para tela de resultado
   salvarEstadoGlobal({
     jogadores: novosJogadores,
-    valorAtual: null,
-    pergunta: novaPergunta,
-    jogadorDaVez: state.jogadorDaVez
+    tela: "resultado-duvida",
+    respostaOficial: correta,
+    jogadorUm: jogadorUm,
+    jogadorDois: jogadorDois,
+    jogadorUmPontuou: jogadorUmPontuou
   });
+
+  // 🔥 Após tempo configurado → próxima pergunta
+  setTimeout(() => {
+
+    const novaPergunta = bancoPerguntasOriginal[Math.floor(Math.random() * bancoPerguntasOriginal.length)];
+
+    salvarEstadoGlobal({
+      tela: "jogo",
+      pergunta: novaPergunta,
+      valorAtual: null,
+      ultimoJogador: null,
+      respostaOficial: null,
+      jogadorUm: null,
+      jogadorDois: null,
+      jogadorUmPontuou: null
+    });
+
+  }, TEMPO_RESULTADO_DUVIDA);
 }
 
 function enviarMensagemChat(texto) {
