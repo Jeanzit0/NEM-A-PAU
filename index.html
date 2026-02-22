@@ -594,13 +594,18 @@ async function duvidar() {
   let resultadoTexto = "";
   let jogadorUmPontuou = false;
 
+   tocarSom("som-duvida", 0.6);
+   await delay(2000);
+
   if (state.valorAtual > correta) {
     // JogadorUm mentiu
+    tocarSom("som-ponto", 0.6);
     const jIdx = novosJogadores.findIndex(j => j.nome === jogadorUm.nome);
     novosJogadores[jIdx].pontos++;
     jogadorUmPontuou = true;
   } else {
     // JogadorDois errou a dúvida
+    tocarSom("som-erro", 0.6);
     const dIdx = novosJogadores.findIndex(j => j.nome === jogadorDois.nome);
     novosJogadores[dIdx].pontos++;
   }
